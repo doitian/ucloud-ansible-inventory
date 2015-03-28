@@ -6,6 +6,7 @@
 
 可以参考 hosts.yml 的示例 ansible playbook 如何为所有 uhost 生成 hosts 文件来方便访问，如果换成调用 DNSPod API 就能实现自动更新 DNS 记录。
 
+
 # 开始
 
 ## 安装
@@ -53,6 +54,12 @@
 直接运行脚本 `ucloud.py`，没有错误应该会打印出符合 ansible dynamic inventory 要求的 JSON，然后可以运行 ansible 列表所有机器
 
 	ansible all -i inventory --list-hosts
+
+如果一切正常可以测试下 demo playbook hosts.yml
+
+	ansible-playbook hosts.yml
+
+该 playbook 会在当前目录生成 hosts，如果覆盖 /etc/hosts 可以使用里面配置的主机名比如 `ops.ucloud` 来访问 ucloud 主机了。而如果云主机已经配置能使用 ubuntu sudo 进行 ansible 操作，那么这些主机名也更新到所有的云主机上了。
 
 ## 缓存
 

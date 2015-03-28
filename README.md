@@ -1,5 +1,7 @@
 # UCloud Ansbile Inventory
 
+本项目是[UCloud三周年API开发大赛](http://www.ucloud.cn/sdk/index)参赛作品，如果觉得有用，可以[投上一票](https://campaign.gitcafe.com/ucloud-sdk-2015/cadidates?tags%5B%5D=工具类)
+
 [UCloud][]'s Ansible  [Dynamic Inventory][] script
 
 [Ansible][] 是自动化配置工具，Dynamic Inventory 允许使用脚本获到需要配置的机器列表和信息。

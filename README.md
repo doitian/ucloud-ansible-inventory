@@ -4,7 +4,7 @@
 
 [Ansible][] 是自动化配置工具，Dynamic Inventory 允许使用脚本获到需要配置的机器列表和信息。
 
-可以参考 hosts.yml 的示例 ansible playbook 如何为所有 uhost 生成 hosts 文件
+可以参考 hosts.yml 的示例 ansible playbook 如何为所有 uhost 生成 hosts 文件来方便访问，如果换成调用 DNSPod API 就能实现自动更新 DNS 记录。
 
 # 开始
 
@@ -24,7 +24,7 @@
 
 	cp inventory/ucloud.example.ini inventory/ucloud.ini
 
-首先需要修改 ucloud API 的连接信息，`region` 配置参考 [数据中心列表](http://docs.ucloud.cn/api/regionlist.html)。目前只支持单个机房，需要跨机房复制几份 `ucloud.py`，注意配置文件的名字要和脚本名字一致，比如 `ucloud_east.py` 读取配置文件 `ucloud_east.ini`。
+首先需要修改 ucloud API 的连接信息，`region` 配置参考 [数据中心列表](http://docs.ucloud.cn/api/regionlist.html)。目前只支持单个机房，需要跨机房复制几份 `ucloud.py`，注意配置文件的名字要和脚本名字一致，比如 `ucloud_east.py` 读取配置文件 `ucloud_east.ini`，并且缓存文件不能同名。
 
 	[ucloud]
 	public_key = changeme
@@ -54,6 +54,12 @@
 
 	ansible all -i inventory --list-hosts
 
+## 缓存
+
+示例配置中默认开启了缓存，如果改变了 ucloud 的设置想要立即更新主机信息，可以手动执行下面命令刷新缓存
+
+	inventory/ucloud.py --refresh-cache
+
 # 命名规则
 
 ## 主机名
@@ -69,6 +75,12 @@ uhost 使用 Name 字段, ulb 使用 ULBName, ucdn 使用 Domain
 首先所有的资源都按照类型进行了分组， uhost, ulb, ucdn 分别对应 ansible 的组 uhosts, ulbs 和 ucdns
 
 另外 uhost 还支持自定义分组，规则是使用『业务组名称』(对应 API 返回结果中的 Tag)。业务组名称使用英文逗号分隔之后并加上 `tag_` 前缀即为该主机要加入的 ansible 主机组。比如主机 ops 的业务组名称是 `dev,public` 那么在 ansible 中会包含在组 `tag_dev` 和 `tag_public` 中。
+
+## 主机变量名
+
+所有 API 返回结果以及上面提到的额外 IP 字段都会嵌套在主机变量 ucloud 下，比如在 jinja2 模板中引用出口 IP
+
+    {{ ucloud.PublicIP }}
 
 [ansible]: http://www.ansible.com
 [dynamic inventory]: http://docs.ansible.com/intro_dynamic_inventory.html

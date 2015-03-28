@@ -56,8 +56,10 @@ class UCClient:
       response = self.get('/', query)
       if 'ToaltCount' in response:
         got_count = response['ToaltCount']
-      else:
+      elif 'TotalCount' in response:
         got_count = response['TotalCount']
+      else:
+        got_count = 0
 
       if data_set_name in response:
         for item in response[data_set_name]:
@@ -101,7 +103,10 @@ class UCInventory:
     """ Reads the settings from the ucloud.ini file """
 
     config = self.config = ConfigParser.RawConfigParser()
-    config.read(os.path.dirname(os.path.realpath(__file__)) + '/ucloud.ini')
+    script_file = os.path.realpath(__file__)
+    config_dir = os.path.dirname(script_file)
+    config_basename = os.path.basename(script_file).rsplit('.', 1)[0] + '.ini'
+    config.read('/'.join([config_dir, config_basename]))
 
     self.region = config.get('ucloud', 'region')
     self.client = UCClient(
@@ -178,11 +183,13 @@ class UCInventory:
 
 
   def extract_ips(self, instance):
-    for ip in instance.get('IPSet', []):
-      if 'IP' in ip:
-        instance[ip['Type'] + 'IP'] = ip['IP']
-      else:
-        instance[ip['OperatorName'] + 'IP'] = ip['EIP']
+    if 'IPSet' in instance:
+      for ip in instance['IPSet']:
+        if 'IP' in ip:
+          instance[ip['Type'] + 'IP'] = ip['IP']
+        else:
+          instance[ip['OperatorName'] + 'IP'] = ip['EIP']
+      instance['PublicIP'] = instance.get('BgpIP') or instance.get('InternationalIP') or instance.get('TelecomIP') or instance.get('UnicomIP')
 
     return instance
 

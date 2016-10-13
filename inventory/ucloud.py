@@ -150,34 +150,42 @@ class UCInventory:
 
   def add_uhosts(self, index):
     for uhost in self.client.describe('UHostInstance', { 'Region': self.region }):
-      safe_name = self.to_safe(uhost['Name'])
-      index['uhosts'].append(safe_name)
-      for tag in uhost['Tag'].split(','):
-        tag = tag.strip()
-        if len(tag) > 0:
-          index['tag_' + self.to_safe(tag)].append(safe_name)
-
       uhost = self.extract_ips(uhost)
-      ssh_options = self.ssh_options('uhost', safe_name, uhost)
-      index['_meta']['hostvars'][safe_name] = dict(ssh_options, ucloud = uhost)
+      safe_name = self.to_safe(uhost['Name'])
+      options = self.item_options('uhost', safe_name, uhost)
+      inventory_name = self.to_safe(options['name'] % uhost)
+      for g in options['group'].split(','):
+        index[g].append(inventory_name)
+      for tag in uhost['Tag'].split(','):
+        for expanded_tag in (options['tag'] % { 'Tag': tag.strip() }).split(','):
+          if len(expanded_tag) > 0:
+            index[self.to_safe(expanded_tag)].append(inventory_name)
+
+      ssh_options = self.ssh_options(options, uhost)
+      index['_meta']['hostvars'][inventory_name] = dict(ssh_options, ucloud = uhost)
 
 
   def add_ulbs(self, index):
     for ulb in self.client.describe('ULB', { 'Region': self.region }):
-      safe_name = self.to_safe(ulb['Name'])
-      index['ulbs'].append(safe_name)
-
       ulb = self.extract_ips(ulb)
-      ssh_options = self.ssh_options('ulb', safe_name, ulb)
+      safe_name = self.to_safe(ulb['Name'])
+      options = self.item_options('ulb', safe_name, ulb)
+      inventory_name = self.to_safe(options['name'] % ulb)
+      for g in options['group'].split(','):
+        index[g].append(inventory_name)
+      ssh_options = self.ssh_options(options, ulb)
       index['_meta']['hostvars'][safe_name] = dict(ssh_options, ucloud = ulb)
 
 
   def add_ucdns(self, index):
     for ucdn in self.client.describe('UcdnDomain', { 'Region': self.region }):
       safe_name = self.to_safe(ucdn['Domain'])
-      index['ucdns'].append(safe_name)
+      options = self.item_options('ucdn', safe_name, ucdn)
+      inventory_name = self.to_safe(options['name'] % ucdn)
+      for g in options['group'].split(','):
+        index[g].append(inventory_name)
 
-      ssh_options = self.ssh_options('ucdn', safe_name, ucdn)
+      ssh_options = self.ssh_options(options, ucdn)
 
       index['_meta']['hostvars'][safe_name] = dict(ssh_options, ucloud = ucdn)
 
@@ -193,13 +201,15 @@ class UCInventory:
 
     return instance
 
-
-  def ssh_options(self, kind, name, instance):
+  def item_options(self, kind, name, instance):
     options = dict(self.config.items(kind))
     specific_section = '.'.join([kind, name])
     if self.config.has_section(specific_section):
       options.update(self.config.items(specific_section))
 
+    return options
+
+  def ssh_options(self, options, instance):
     return {
         'ansible_ssh_user': options['user'] % instance,
         'ansible_ssh_host': options['host'] % instance,

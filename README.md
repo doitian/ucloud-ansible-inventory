@@ -73,7 +73,7 @@
 
 即相应资源在 ansible 中使用的 host 名称。
 
-uhost 使用 Name 字段, ulb 使用 ULBName, ucdn 使用 Domain
+uhost 使用 Name 字段, ulb 使用 Name, ucdn 使用 Domain
 
 所有名称都将除了字母，数字和 `-` `_` 的其它字符替换成了 `_`，比如 ucdn test.example.com 对应的名称是 `test_example_com`
 

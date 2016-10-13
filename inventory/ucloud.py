@@ -164,7 +164,7 @@ class UCInventory:
 
   def add_ulbs(self, index):
     for ulb in self.client.describe('ULB', { 'Region': self.region }):
-      safe_name = self.to_safe(ulb['ULBName'])
+      safe_name = self.to_safe(ulb['Name'])
       index['ulbs'].append(safe_name)
 
       ulb = self.extract_ips(ulb)
